@@ -53,7 +53,7 @@ app.get("/herois/:id", function (req, res) {
   res.send(item);
 });
 
-// Create (Criar um item)
+// Create (Criar um único item)
 app.post("/herois", function (req, res) {
   // Obtemos o nome que foi enviado no body da requisição
   const item = req.body.nome;

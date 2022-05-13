@@ -96,9 +96,9 @@ async function main() {
     // Obtemos o ID do item a ser atualizado
     const id = req.params.id;
 
-    const itemEncoontrado = await collection.findOne({ _id: new ObjectId(id) });
+    const itemEncontrado = await collection.findOne({ _id: new ObjectId(id) });
 
-    if (!itemEncoontrado) {
+    if (!itemEncontrado) {
       // Envia uma resposta de não encontrado
       res.status(404).send("Item não encontrado.");
 
@@ -127,7 +127,7 @@ async function main() {
 
     const itemEncontrado = await collection.findOne({ _id: new ObjectId(id) });
 
-    if (itemEncontrado) {
+    if (!itemEncontrado) {
       // Envia uma resposta de não encontrado
       res.status(404).send("Item não encontrado.");
 

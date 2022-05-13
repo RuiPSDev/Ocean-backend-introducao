@@ -8,12 +8,14 @@ const dbName = "ocean_bancodedados_13_05_2022";
 
 async function main() {
   console.log("Conectando com o banco de dados...");
-
+  // starting a promise to connect with MongoDB
   const client = await MongoClient.connect(url);
-
+  // opening our database in MongoDB 
   const db = client.db(dbName);
-
+  // opening the collection 'herois' in our 
   const collection = db.collection("herois");
+
+  console.log("Conexão com o MongoDB ocorreu com sucesso...");
 
   const app = express();
 
@@ -44,18 +46,19 @@ async function main() {
   //               0                    1               2
 
   // Read All (Ler todos os itens)
-  app.get("/herois", function (req, res) {
-    res.send(herois);
+  app.get("/herois", async function (req, res) {
+    const documentos = await collection.find().toArray();
+    res.send(documentos);
   //  res.send(herois.filter(Boolean));  // descarta os nulls
   });
 
   // Read by ID (Visualizar um item pelo ID)
-  app.get("/herois/:id", function (req, res) {
+  app.get("/herois/:id", async function (req, res) {
     // Recebemos o ID que iremos buscar
     const id = req.params.id;
 
     // Buscamos o item dentro da lista, utilizando o ID
-    const item = herois[id - 1];
+    const item = await collection.findOne({ _id: new ObjectId(id) });
 
     if (!item) {
       // Envia uma resposta de não encontrado
@@ -69,9 +72,9 @@ async function main() {
   });
 
   // Create (Criar um único item)
-  app.post("/herois", function (req, res) {
+  app.post("/herois", async function (req, res) {
     // Obtemos o nome que foi enviado no body da requisição
-    const item = req.body.nome;
+    const item = req.body;
 
     if (!item) {
       res
@@ -83,17 +86,19 @@ async function main() {
     }
 
     // Adicionamos esse item obtido dentro da lista de heróis
-    herois.push(item);
+    await collection.insertOne(item);
 
-    res.send("Item criado com sucesso!");
+    res.send(item);
   });
 
   // Update (Editar um item)
-  app.put("/herois/:id", function (req, res) {
+  app.put("/herois/:id", async function (req, res) {
     // Obtemos o ID do item a ser atualizado
     const id = req.params.id;
 
-    if (!herois[id - 1]) {
+    const itemEncoontrado = await collection.findOne({ _id: new ObjectId(id) });
+
+    if (!itemEncoontrado) {
       // Envia uma resposta de não encontrado
       res.status(404).send("Item não encontrado.");
 
@@ -102,20 +107,27 @@ async function main() {
     }
 
     // Pegamos a nova informação que está sendo enviada
-    const item = req.body.nome;
+    const item = req.body;
 
     // Atualizamos a informação na lista
-    herois[id - 1] = item;
+    collection.updateOne(
+      { _id: new ObjectId(id) },
+      {
+        $set: item,
+      }
+    );
 
-    res.send("Item editado com sucesso!");
+    res.send(item);
   });
 
   // Delete (Remover um item)
-  app.delete("/herois/:id", function (req, res) {
+  app.delete("/herois/:id", async function (req, res) {
     // Obtemos o ID do registro que será excluído
     const id = req.params.id;
 
-    if (!herois[id - 1]) {
+    const itemEncontrado = await collection.findOne({ _id: new ObjectId(id) });
+
+    if (itemEncontrado) {
       // Envia uma resposta de não encontrado
       res.status(404).send("Item não encontrado.");
 
@@ -124,7 +136,7 @@ async function main() {
     }
 
     // Removemos o item da lista
-    delete herois[id - 1];
+    await collection.deleteOne({ _id: new ObjectId(id) });
 
     res.send("Item removido com sucesso!");
   });
